@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>599</width>
+    <height>245</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Tab 1</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="5">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Pre-filter gain</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>DC Offset (mV)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="6">
+         <widget class="QComboBox" name="comboBox">
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>100</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QComboBox" name="comboBox_4">
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>5</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>20</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>50</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>100</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>200</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="4" column="6">
+         <widget class="QCheckBox" name="checkBox">
+          <property name="text">
+           <string>Notch filter</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Low-pass filter (Hz)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+        </item>
+        <item row="1" column="5">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Post-filter gain</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="6">
+         <widget class="QComboBox" name="comboBox_3">
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>6</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>8</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>12</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>14</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>16</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>18</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>20</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>22</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>24</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>26</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>28</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>30</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>40</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>60</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>80</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>100</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>120</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>140</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>160</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>180</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>200</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>220</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>240</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>260</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>280</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>300</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>400</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>600</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>800</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1200</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1400</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1600</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1800</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2200</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2400</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2600</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2800</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>6000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>8000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>12000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>14000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>16000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>18000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>20000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>22000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>24000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>26000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>28000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>30000</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="4" column="4">
+         <widget class="QToolButton" name="toolButton">
+          <property name="text">
+           <string>auto</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" rowspan="3" colspan="3">
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Input coupling</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Positive input</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_2">
+             <item>
+              <property name="text">
+               <string>GND</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>DC</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>0.1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>10</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>30</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>100</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>300</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Negative input</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_5">
+             <item>
+              <property name="text">
+               <string>GND</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>DC</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>0.1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>10</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>30</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>100</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>300</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Tab 2</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>599</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
