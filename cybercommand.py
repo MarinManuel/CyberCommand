@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import QApplication, QInputDialog, QMainWindow, QTabWidget,
     QToolButton, QCheckBox, QLabel, QAction
 from serial.tools import list_ports
 from CyberAmp import CyberAmp
-from tqdm import tqdm
 
 DEFAULT_BAUDRATE = CyberAmp.MAX_BAUDRATE
 
@@ -22,7 +21,7 @@ def discover_addresses(port, baudrate=DEFAULT_BAUDRATE):
     """
     valid_ids = []
     s = serial.Serial(port=port, baudrate=baudrate, timeout=CyberAmp.TIMEOUT)
-    for id_ in tqdm(range(CyberAmp.NB_DEVICES), desc='scanning for devices'):
+    for id_ in range(CyberAmp.NB_DEVICES):
         s.write(f'AT{id_}S\r'.encode())
         out = s.read_until(CyberAmp.END_TRANSMIT).decode('ascii')
         # noinspection SpellCheckingInspection
@@ -49,7 +48,7 @@ def discover_devices(port=None, baudrate=DEFAULT_BAUDRATE):
         serial_ports = [port]
     valid_ports = []
     # try to connect to each serial ports, and test if CyberAmp responds
-    for port in tqdm(serial_ports, desc='scanning serial ports'):
+    for port in serial_ports:
         # noinspection PyBroadException
         try:
             s = serial.Serial(port=port, baudrate=baudrate, timeout=CyberAmp.TIMEOUT)
