@@ -187,19 +187,21 @@ $''', flags=re.VERBOSE)
     def print_status(self):
         return f'{self.channel_number:d} X={"0" if len(self.probe_id) == 0 else self.probe_id:<8s} ' + \
                f'+={self.pos_coupling.value:<3s} -={self.neg_coupling.value:<3s} P={self.pre_gain.value:>03s} ' + \
-               f'O={self.post_gain.value:>03s} N={"1" if self.notch==Notch.ON else "0"} D={self.offset:+08d} ' + \
+               f'O={self.post_gain.value:>03s} N={"1" if self.notch == Notch.ON else "0"} D={self.offset:+08d} ' + \
                f'F={self.low_pass.value}'
 
 
 class CyberAmp(object):
     PREAMBLE = 'AT{device_id}'
     CMD_STATUS = 'S+'
+    CMD_WRITE = 'W'
+    CMD_DEFAULTS = 'L'
     CMD_COUPLING = 'C{channel}{polarity}{coupling}'
     CMD_OFFSET = 'D{channel}{offset:+08d}'
     CMD_LOWPASS = 'F{channel}{frequency}'
-    CMD_GAIN = 'G{channel}P{pre_gain} G{channel}O{post_gain}'
+    CMD_PREGAIN = 'G{channel}P{gain}'
+    CMD_POSTGAIN = 'G{channel}O{gain}'
     CMD_NOTCH = 'N{channel}{notch}'
-    CMD_WRITE = 'W'
     CMD_ZERO = 'Z{channel}'
 
     # noinspection SpellCheckingInspection
@@ -253,21 +255,37 @@ class CyberAmp(object):
             raise ValueError(f'ERROR: channel <{channel}> must be in the range [1-{NB_CHANNELS}]')
         return channel
 
-    def set_input_coupling(self, channel: int, polarity: Input, coupling: Coupling):
+    def set_params(self, channel: int,
+                   pos_coupling: Coupling = None, neg_coupling: Coupling = None,
+                   pre_gain: PreGain = None, post_gain: PostGain = None, low_pass: LowPass = None,
+                   notch: Notch = None):
         """
-        Set input coupling
+        Set all (or a subset of) channel parameters in one command
         :param channel: channel number (1-8)
-        :param polarity: polarity to set, positive (+) or negative (-)
-        :param coupling:
-        :return: frequency of the input coupling, one of GND DC 0.1 1 10 30 100 300
+        :param pos_coupling: Coupling for positive input
+        :param neg_coupling: Coupling for negative input
+        :param pre_gain: Pre-amplifier gain
+        :param post_gain: Post-amplifier gain
+        :param low_pass: Low-pass filter frequency
+        :param notch: Whether to include a notch filter
         """
-        _ = self.send_command(self.CMD_COUPLING.format(channel=self.validate_channel(channel),
-                                                       polarity=polarity.value,
-                                                       coupling=coupling.value))
-        if coupling == Input.POS:
-            self.channels[channel - 1].pos_coupling = coupling
-        else:
-            self.channels[channel - 1].neg_coupling = coupling
+        channel = self.validate_channel(channel)
+        cmd = ''
+        if pos_coupling is not None:
+            cmd += self.CMD_COUPLING.format(channel=channel, polarity='+', coupling=pos_coupling.value) + ' '
+        if neg_coupling is not None:
+            cmd += self.CMD_COUPLING.format(channel=channel, polarity='-', coupling=neg_coupling.value) + ' '
+        if pre_gain is not None:
+            cmd += self.CMD_PREGAIN.format(channel=channel, gain=pre_gain.value) + ' '
+        if post_gain is not None:
+            cmd += self.CMD_POSTGAIN.format(channel=channel, gain=post_gain.value) + ' '
+        if low_pass is not None:
+            cmd += self.CMD_LOWPASS.format(channel=channel, frequency=low_pass.value) + ' '
+        if notch is not None:
+            cmd += self.CMD_NOTCH.format(channel=channel, notch=notch.value) + ' '
+
+        if len(cmd) > 0:
+            self.send_command(cmd)
 
     def set_offset(self, channel: int, offset: int):
         """
@@ -278,57 +296,16 @@ class CyberAmp(object):
         out = self.send_command(self.CMD_OFFSET.format(channel=self.validate_channel(channel),
                                                        offset=offset))
         if '!' in out:
-            logging.warning(f'Offset <{offset:+08d}> is out of range, ignoring...')
+            raise ValueError(f'ERROR: Offset <{offset:+08d}> is out of range')
         else:
             self.channels[channel - 1].offset = offset
-
-    def set_low_pass_frequency(self, channel: int, frequency: LowPass):
-        """
-        set Frequency of low-pass filter
-        :param channel: channel number (1-8)
-        :param frequency: filter frequency in Hertz
-        """
-        _ = self.send_command(self.CMD_LOWPASS.format(channel=self.validate_channel(channel),
-                                                      frequency=frequency.value))
-        self.channels[channel - 1].low_pass = frequency
-
-    def set_gain(self, channel: int, pre_gain: PreGain, post_gain: PostGain):
-        """
-        set amplifier gain
-        :param channel: channel number (1-8)
-        :param pre_gain: Pre-filter amplifier gain
-        :param post_gain: Output amplifier gain
-        """
-        _ = self.send_command(self.CMD_GAIN.format(channel=self.validate_channel(channel),
-                                                   pre_gain=pre_gain.value,
-                                                   post_gain=post_gain.value))
-        self.channels[channel - 1].pre_gain = pre_gain
-        self.channels[channel - 1].post_gain = post_gain
-
-    def set_notch_filter(self, channel: int, notch: Notch):
-        """
-        Turn Notch filter ON or OFF
-        :param channel: channel number (1-8)
-        :param notch: ON  if the notch filter is included in the signal pathway
-                      OFF if the notch filter is removed from the signal pathway
-        """
-        _ = self.send_command(self.CMD_NOTCH.format(channel=self.validate_channel(channel),
-                                                    notch=notch.value))
-        self.channels[channel - 1].notch = notch
-
-    def write_settings(self):
-        """
-        Writes current settings to the CyberAmp main memory (EEPROM)
-        """
-        _ = self.send_command(self.CMD_WRITE)
 
     def do_autozero(self, channel: int):
         """
         This command automatically zeros out the DC content of the input signal and reports the level.
         :param channel: channel number (1-8)
         """
-        out = self.send_command(self.CMD_ZERO.format(device_id=self.device_id,
-                                                     channel=self.validate_channel(channel)))
+        out = self.send_command(self.CMD_ZERO.format(channel=self.validate_channel(channel)))
         if '!' in out:
             raise ValueError(f'ERROR: Signal is out of range, or channel is faulty')
         else:
@@ -344,3 +321,10 @@ class CyberAmp(object):
             for channel in self.channels:
                 out += channel.print_status() + '\n'
         return out
+
+    def do_write(self):
+        self.send_command(self.CMD_WRITE)
+
+    def load_defaults(self):
+        self.send_command(self.CMD_DEFAULTS)
+        self.refresh()

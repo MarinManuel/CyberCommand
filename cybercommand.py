@@ -5,7 +5,7 @@ import serial
 import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMainWindow, QTabWidget, QWidget, QComboBox, QDoubleSpinBox, \
-    QToolButton, QCheckBox
+    QToolButton, QCheckBox, QLabel, QAction
 from serial.tools import list_ports
 from CyberAmp import CyberAmp
 from tqdm import tqdm
@@ -76,17 +76,25 @@ class CyberWindow(QMainWindow):
     postGainComboBox: QComboBox
     lowPassComboBox: QComboBox
     notchCheckBox: QCheckBox
+    actionWrite: QAction
+    actionQuit: QAction
+    actionDefaults: QAction
+    actionOscillators: QAction
+    actionTerminal: QAction
+    offsetStyleError = 'background: red'
 
     def __init__(self, cyberamp: CyberAmp):
         super(CyberWindow, self).__init__()
         uic.loadUi('MainWindow.ui', self)  # Load the .ui file
         self.cyberamp = cyberamp
 
+        self.probeIdLabel = QLabel()
+        self.statusBar().addWidget(self.probeIdLabel)
+
         # create necessary amount of tabs
         for i, channel in enumerate(self.cyberamp.channels):
             self.tabWidget.addTab(QWidget(), f'Channel {i + 1:d}')
-        self.currentChannel = 0
-        self.tabWidget.setCurrentIndex(self.currentChannel)  # select first tab
+        self.tabWidget.setCurrentIndex(0)  # select first tab
 
         # populate the content of the widgets
         self.posCouplingComboBox.clear()
@@ -108,15 +116,18 @@ class CyberWindow(QMainWindow):
         self.postGainComboBox.currentIndexChanged.connect(self.update_channel)
         self.lowPassComboBox.currentIndexChanged.connect(self.update_channel)
         self.notchCheckBox.stateChanged.connect(self.update_channel)
-        self.offsetSpinBox.focusOutEvent = self.set_offset
+        self.offsetSpinBox.valueChanged.connect(self.set_offset)
         self.autoOffsetButton.clicked.connect(self.do_autozero)
+        self.actionWrite.triggered.connect(self.cyberamp.do_write)
+        self.actionQuit.triggered.connect(self.close)
+        self.actionDefaults.triggered.connect(self.load_defaults)
 
         self.refresh()
         self.show()
 
     def refresh(self):
         self.cyberamp.refresh()
-        channel = self.cyberamp.channels[self.currentChannel]
+        channel = self.cyberamp.channels[self.tabWidget.currentIndex()]
 
         self.do_block_signals(True)
 
@@ -139,7 +150,7 @@ class CyberWindow(QMainWindow):
 
         self.notchCheckBox.setChecked(channel.notch == CyberAmp.Notch.ON)
 
-        self.statusBar().showMessage(f'Probe ID: {channel.probe_id}')
+        self.probeIdLabel.setText(f'Probe ID: {channel.probe_id}')
 
         self.do_block_signals(False)
 
@@ -152,45 +163,47 @@ class CyberWindow(QMainWindow):
         self.lowPassComboBox.blockSignals(block)
         self.notchCheckBox.blockSignals(block)
 
-    def tabChanged(self, index):
-        self.currentChannel = index
+    def tabChanged(self, _):
         self.refresh()
 
     # noinspection PyUnusedLocal
     def update_channel(self, *args, **kwargs):
-        cmd = ''
-        cmd += self.cyberamp.CMD_COUPLING.format(channel=self.currentChannel + 1,
-                                                 polarity='+',
-                                                 coupling=self.posCouplingComboBox.currentText())
-        cmd += ' '
-        cmd += self.cyberamp.CMD_COUPLING.format(channel=self.currentChannel + 1,
-                                                 polarity='-',
-                                                 coupling=self.negCouplingComboBox.currentText())
-        cmd += ' '
-        # cmd += self.cyberamp.CMD_OFFSET.format(channel=self.currentChannel + 1,
-        #                                        offset=int(self.offsetSpinBox.value() * 1e6))
-        # cmd += ' '
-        cmd += self.cyberamp.CMD_LOWPASS.format(channel=self.currentChannel + 1,
-                                                frequency=self.lowPassComboBox.currentText())
-        cmd += ' '
-        cmd += self.cyberamp.CMD_GAIN.format(channel=self.currentChannel + 1,
-                                             pre_gain=self.preGainComboBox.currentText(),
-                                             post_gain=self.postGainComboBox.currentText())
-        cmd += ' '
-        cmd += self.cyberamp.CMD_NOTCH.format(channel=self.currentChannel + 1,
-                                              notch='+' if self.notchCheckBox.isChecked() else '-')
-        cmd += ' '
-        self.cyberamp.send_command(cmd)
+        channel = self.tabWidget.currentIndex()+1
+        pos_coupling = CyberAmp.Coupling(self.posCouplingComboBox.currentText())
+        neg_coupling = CyberAmp.Coupling(self.negCouplingComboBox.currentText())
+        pre_gain = CyberAmp.PreGain(self.preGainComboBox.currentText())
+        post_gain = CyberAmp.PostGain(self.postGainComboBox.currentText())
+        low_pass = CyberAmp.LowPass(self.lowPassComboBox.currentText())
+        notch = CyberAmp.Notch.ON if self.notchCheckBox.isChecked() else CyberAmp.Notch.OFF
+        self.cyberamp.set_params(channel=channel, pos_coupling=pos_coupling, neg_coupling=neg_coupling,
+                                 pre_gain=pre_gain, post_gain=post_gain, low_pass=low_pass, notch=notch)
         self.refresh()
 
-    def set_offset(self, _):
-        channel = self.tabWidget.currentIndex()
-        self.cyberamp.set_offset(channel+1, int(self.offsetSpinBox.value()*1e6))
+    def set_offset(self, value):
+        channel = self.cyberamp.channels[self.tabWidget.currentIndex()]
+        old_offset = channel.offset
+        new_offset = int(value * 1e6)
+        try:
+            self.cyberamp.set_offset(channel.channel_number, new_offset)
+            self.offsetSpinBox.setStyleSheet('')
+        except ValueError:
+            self.offsetSpinBox.blockSignals(True)
+            self.offsetSpinBox.setValue(old_offset * 1e-6)
+            self.offsetSpinBox.setStyleSheet(self.offsetStyleError)
+            self.offsetSpinBox.setFocus()
+            self.statusBar().showMessage("Offset is out of range!", msecs=2000)
+            self.offsetSpinBox.blockSignals(False)
+        self.refresh()
 
     def do_autozero(self, _):
-        channel = self.tabWidget.currentIndex()
-        self.cyberamp.do_autozero(channel+1)
+        channel = self.tabWidget.currentIndex()+1
+        self.cyberamp.do_autozero(channel)
         self.refresh()
+
+    def load_defaults(self, _):
+        self.cyberamp.load_defaults()
+        self.refresh()
+
 
 if __name__ == '__main__':
     # Create the application
