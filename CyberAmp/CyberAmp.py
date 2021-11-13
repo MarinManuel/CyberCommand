@@ -203,6 +203,8 @@ class CyberAmp(object):
     CMD_POSTGAIN = 'G{channel}O{gain}'
     CMD_NOTCH = 'N{channel}{notch}'
     CMD_ZERO = 'Z{channel}'
+    CMD_ELECTRODE_TEST = 'TO{state}'
+    CMD_NOTCH_TEST = 'TN{state}'
 
     # noinspection SpellCheckingInspection
     STATUS_REGEX = r'''(?P<model>CYBERAMP \d+) REV (?P<rev_number>[\d.]+)\s+SERIAL (?P<serial>[#\d]+)'''
@@ -328,3 +330,9 @@ class CyberAmp(object):
     def load_defaults(self):
         self.send_command(self.CMD_DEFAULTS)
         self.refresh()
+
+    def do_electrode_test(self, on: bool):
+        self.send_command(self.CMD_ELECTRODE_TEST.format(state='+' if on else '-'))
+
+    def do_notch_test(self, on: bool):
+        self.send_command(self.CMD_NOTCH_TEST.format(state='+' if on else '-'))

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QApplication, QInputDialog, QMainWindow, QTabWidget,
     QToolButton, QCheckBox, QLabel, QAction
 from serial.tools import list_ports
 from CyberAmp import CyberAmp
+from CyberAmp.TestDialog import TestDialog
 
 DEFAULT_BAUDRATE = CyberAmp.MAX_BAUDRATE
 
@@ -120,6 +121,7 @@ class CyberWindow(QMainWindow):
         self.actionWrite.triggered.connect(self.cyberamp.do_write)
         self.actionQuit.triggered.connect(self.close)
         self.actionDefaults.triggered.connect(self.load_defaults)
+        self.actionOscillators.triggered.connect(self.show_oscillators_dlg)
 
         self.refresh()
         self.show()
@@ -202,6 +204,10 @@ class CyberWindow(QMainWindow):
     def load_defaults(self, _):
         self.cyberamp.load_defaults()
         self.refresh()
+
+    def show_oscillators_dlg(self):
+        dlg = TestDialog(cyberamp=self.cyberamp)
+        dlg.exec()
 
 
 if __name__ == '__main__':
