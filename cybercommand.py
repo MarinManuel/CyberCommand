@@ -5,7 +5,7 @@ import serial
 import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMainWindow, QTabWidget, QWidget, QComboBox, QDoubleSpinBox, \
-    QToolButton, QCheckBox, QLabel, QAction
+    QToolButton, QCheckBox, QLabel, QAction, QMessageBox, QProgressDialog
 from serial.tools import list_ports
 from CyberAmp import CyberAmp
 from CyberAmp.TestDialog import TestDialog
@@ -13,16 +13,20 @@ from CyberAmp.TestDialog import TestDialog
 DEFAULT_BAUDRATE = CyberAmp.MAX_BAUDRATE
 
 
-def discover_addresses(port, baudrate=DEFAULT_BAUDRATE):
+# noinspection PyShadowingNames
+def discover_addresses(port, baudrate=DEFAULT_BAUDRATE, app: QApplication = None):
     """
     discover the valid devices ids on the given serial serial
     :param port:  serial serial to connect to
     :param baudrate: baudrate
+    :param app: application pointer
     :return: a list of valid addresses, or an empty list
     """
     valid_ids = []
     s = serial.Serial(port=port, baudrate=baudrate, timeout=CyberAmp.TIMEOUT)
     for id_ in range(CyberAmp.NB_DEVICES):
+        if app is not None:
+            app.processEvents()
         s.write(f'AT{id_}S\r'.encode())
         out = s.read_until(CyberAmp.END_TRANSMIT).decode('ascii')
         # noinspection SpellCheckingInspection
@@ -32,13 +36,15 @@ def discover_addresses(port, baudrate=DEFAULT_BAUDRATE):
     return valid_ids
 
 
-def discover_devices(port=None, baudrate=DEFAULT_BAUDRATE):
+# noinspection PyShadowingNames
+def discover_devices(port=None, baudrate=DEFAULT_BAUDRATE, app: QApplication = None):
     """
     scan through the available serial ports and return a list of
     ports to which a CyberAmp is connected
     :param port: if not None, scan only that serial serial,
                  otherwise, scans all available serial ports
     :param baudrate: baudrate
+    :param app: application pointer
     :return: a list of tuples.
              The first element of each tuple is the serial serial,
              the second is a list of device addresses
@@ -58,11 +64,13 @@ def discover_devices(port=None, baudrate=DEFAULT_BAUDRATE):
             s.close()
             # noinspection SpellCheckingInspection
             if 'CYBERAMP' in out:
-                found_ids = discover_addresses(port=port, baudrate=baudrate)
+                found_ids = discover_addresses(port=port, baudrate=baudrate, app=app)
                 valid_ports.extend(itertools.product([port], found_ids))
         except Exception as e:
             logging.debug("Encountered Exception: " + str(e))
             pass
+        if app is not None:
+            app.processEvents()
     return valid_ports
 
 
@@ -169,7 +177,7 @@ class CyberWindow(QMainWindow):
 
     # noinspection PyUnusedLocal
     def update_channel(self, *args, **kwargs):
-        channel = self.tabWidget.currentIndex()+1
+        channel = self.tabWidget.currentIndex() + 1
         pos_coupling = CyberAmp.Coupling(self.posCouplingComboBox.currentText())
         neg_coupling = CyberAmp.Coupling(self.negCouplingComboBox.currentText())
         pre_gain = CyberAmp.PreGain(self.preGainComboBox.currentText())
@@ -197,7 +205,7 @@ class CyberWindow(QMainWindow):
         self.refresh()
 
     def do_autozero(self, _):
-        channel = self.tabWidget.currentIndex()+1
+        channel = self.tabWidget.currentIndex() + 1
         self.cyberamp.do_autozero(channel)
         self.refresh()
 
@@ -205,6 +213,7 @@ class CyberWindow(QMainWindow):
         self.cyberamp.load_defaults()
         self.refresh()
 
+    # noinspection PyShadowingNames
     def show_oscillators_dlg(self):
         dlg = TestDialog(cyberamp=self.cyberamp)
         dlg.exec()
@@ -238,10 +247,16 @@ if __name__ == '__main__':
     if cli_arguments.port is not None and cli_arguments.device is not None:
         devices = [(cli_arguments.port, cli_arguments.device)]
     else:
-        devices = discover_devices(port=cli_arguments.port, baudrate=cli_arguments.baudrate)
+        dlg = QProgressDialog("Scanning serial ports", 'Cancel', 0, 0)
+        dlg.setRange(0, 0)
+        dlg.show()
+        devices = discover_devices(port=cli_arguments.port, baudrate=cli_arguments.baudrate, app=app)
+        dlg.close()
     logging.debug('Devices found: ' + str(devices))
 
     if len(devices) == 0:
+        # noinspection PyTypeChecker
+        QMessageBox.critical(None, 'No serial port', 'ERROR: cannot find an appropriate serial serial. Aborting')
         raise RuntimeError('ERROR: cannot find an appropriate serial serial. Aborting')
 
     # if we found more than one device (on one or more serial serial),
@@ -263,9 +278,9 @@ if __name__ == '__main__':
 
     serial_obj = serial.Serial(port=serial_port, baudrate=cli_arguments.baudrate)
     amp = CyberAmp.CyberAmp(device_id=device_id, serial=serial_obj)
-    logging.info(f"Connected to serial <{serial_port}>, address <{device_id}>: {amp.__repr__()}")
+    logging.debug(f"Connected to serial <{serial_port}>, address <{device_id}>: {amp.__repr__()}")
     amp.refresh()
-    print(amp.print_status(include_channels=True))
+    logging.debug(amp.print_status(include_channels=True))
 
     mainWindow = CyberWindow(cyberamp=amp)
 

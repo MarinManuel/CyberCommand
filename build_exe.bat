@@ -1,0 +1,1 @@
+pyinstaller.exe --noconsole --add-data ".\MainWindow.ui;." cybercommand.py
