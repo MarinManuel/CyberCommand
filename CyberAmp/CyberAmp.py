@@ -193,7 +193,7 @@ $''', flags=re.VERBOSE)
 
 class CyberAmp(object):
     PREAMBLE = 'AT{device_id}'
-    CMD_STATUS = 'S+'
+    CMD_STATUS = 'S{channel}'
     CMD_WRITE = 'W'
     CMD_DEFAULTS = 'L'
     CMD_COUPLING = 'C{channel}{polarity}{coupling}'
@@ -233,23 +233,38 @@ class CyberAmp(object):
         logging.debug(f'Received response : {log_ret}')
         return ret
 
-    def refresh(self):
-        out = self.send_command(self.CMD_STATUS.format(device_id=self.device_id))
+    def refresh(self, index: int = None):
+        """
+        Query the CyberAmp for the current configuration and
+        update the state of the object to match
+        :param index: index number (1-8) or None
+                        if index is None, updates all channels
+                        otherwise, only query the status of the specified index
+        """
+        if index is None:
+            _index = '+'
+        else:
+            _index = f'{index:d}'
+        out = self.send_command(self.CMD_STATUS.format(channel=_index))
         logging.debug(f'Current status is:')
         logging.debug(out.replace('\r', '\n'))
-        self.parse_status(out)
+        self.parse_status(out, index=index)
 
-    def parse_status(self, out):
-        match = self.regex_status.match(out)
-        if not match:
-            raise ValueError(f'ERROR parsing status from CyberAmp, answer was <{out}>')
+    def parse_status(self, out, index: int = None):
+        if index is None:
+            match = self.regex_status.match(out)
+            if not match:
+                raise ValueError(f'ERROR parsing status from CyberAmp, answer was <{out}>')
 
-        self.model_id = match.group('model')
-        self.rev_number = match.group('rev_number')
-        self.serial_number = match.group('serial')
-        params = out[match.end() + 1:].splitlines()
-        for channel, line in zip(self.channels, params):
-            channel.parse(line)
+            self.model_id = match.group('model')
+            self.rev_number = match.group('rev_number')
+            self.serial_number = match.group('serial')
+            params = out[match.end() + 1:].splitlines()
+            for channel, line in zip(self.channels, params):
+                channel.parse(line)
+        else:
+            channel = self.channels[self.validate_channel(index)-1]
+            channel.parse(out)
 
     @staticmethod
     def validate_channel(channel):
