@@ -131,12 +131,21 @@ class CyberWindow(QMainWindow):
         self.actionDefaults.triggered.connect(self.load_defaults)
         self.actionOscillators.triggered.connect(self.show_oscillators_dlg)
 
-        self.refresh()
+        self.refresh(index=None)
+
+        self.tabWidget.setCurrentIndex(0)
+        self.refresh_ui(0)
+
         self.show()
 
-    def refresh(self):
-        self.cyberamp.refresh()
-        channel = self.cyberamp.channels[self.tabWidget.currentIndex()]
+    def refresh(self, index: int = None):
+        self.cyberamp.refresh(channel_id=index if index is None else index+1)
+
+        if index is not None:
+            self.refresh_ui(index)
+
+    def refresh_ui(self, index: int):
+        channel = self.cyberamp.channels[index]
 
         self.do_block_signals(True)
 
@@ -172,8 +181,8 @@ class CyberWindow(QMainWindow):
         self.lowPassComboBox.blockSignals(block)
         self.notchCheckBox.blockSignals(block)
 
-    def tabChanged(self, _):
-        self.refresh()
+    def tabChanged(self, index: int):
+        self.refresh(index=index)
 
     # noinspection PyUnusedLocal
     def update_channel(self, *args, **kwargs):
