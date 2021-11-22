@@ -110,7 +110,7 @@ class Input(Enum):
 
 
 class Channel:
-    parse_regex = re.compile(r'''^
+    parse_regex = re.compile(r'''
 (?P<chan_num>[1-8])\s+                  # Channel Number 
 X=(?P<probe_id>[\d\w]{1,8})\s+          # Probe ID. At most 8 alphanumerical char 
 \+=(?P<pos_coupling>[\d.]+|GND|DC)\s+   # Positive input coupling. 
@@ -123,7 +123,7 @@ O=(?P<post_gain>\d+)\s+                 # Post-amplifier gain.
 N=(?P<notch>[01])\s+                    # Notch filter. Either 0 or 1
 D=(?P<offset>[+-]\d+)\s+                # Input offset.
 F=(?P<low_pass>\d+|-)                     # Low pass filter frequency
-$''', flags=re.VERBOSE)
+''', flags=re.VERBOSE)
 
     def __init__(self, num):
         self.channel_number = num
@@ -233,25 +233,25 @@ class CyberAmp(object):
         logging.debug(f'Received response : {log_ret}')
         return ret
 
-    def refresh(self, index: int = None):
+    def refresh(self, channel_id: int = None):
         """
         Query the CyberAmp for the current configuration and
         update the state of the object to match
-        :param index: index number (1-8) or None
-                        if index is None, updates all channels
-                        otherwise, only query the status of the specified index
+        :param channel_id: channel_id number (1-8) or None
+                        if channel_id is None, updates all channels
+                        otherwise, only query the status of the specified channel_id
         """
-        if index is None:
+        if channel_id is None:
             _index = '+'
         else:
-            _index = f'{index:d}'
+            _index = f'{channel_id:d}'
         out = self.send_command(self.CMD_STATUS.format(channel=_index))
         logging.debug(f'Current status is:')
         logging.debug(out.replace('\r', '\n'))
-        self.parse_status(out, index=index)
+        self.parse_status(out, channel_id=channel_id)
 
-    def parse_status(self, out, index: int = None):
-        if index is None:
+    def parse_status(self, out, channel_id: int = None):
+        if channel_id is None:
             match = self.regex_status.match(out)
             if not match:
                 raise ValueError(f'ERROR parsing status from CyberAmp, answer was <{out}>')
@@ -263,7 +263,7 @@ class CyberAmp(object):
             for channel, line in zip(self.channels, params):
                 channel.parse(line)
         else:
-            channel = self.channels[self.validate_channel(index)-1]
+            channel = self.channels[self.validate_channel(channel_id) - 1]
             channel.parse(out)
 
     @staticmethod

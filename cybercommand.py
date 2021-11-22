@@ -132,10 +132,19 @@ class CyberWindow(QMainWindow):
         self.actionOscillators.triggered.connect(self.show_oscillators_dlg)
 
         self.refresh(index=None)
+
+        self.tabWidget.setCurrentIndex(0)
+        self.refresh_ui(0)
+
         self.show()
 
     def refresh(self, index: int = None):
-        self.cyberamp.refresh(index=index)
+        self.cyberamp.refresh(channel_id=index if index is None else index+1)
+
+        if index is not None:
+            self.refresh_ui(index)
+
+    def refresh_ui(self, index: int):
         channel = self.cyberamp.channels[index]
 
         self.do_block_signals(True)
